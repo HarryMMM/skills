@@ -1,0 +1,59 @@
+"""
+Logging configuration for the application.
+"""
+
+import logging
+import sys
+
+
+class ColoredFormatter(logging.Formatter):
+    """Colored log formatter for console output."""
+
+    COLORS = {
+        "DEBUG": "\033[36m",
+        "INFO": "\033[32m",
+        "WARNING": "\033[33m",
+        "ERROR": "\033[31m",
+        "CRITICAL": "\033[35m",
+    }
+    RESET = "\033[0m"
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_color = self.COLORS.get(record.levelname, self.RESET)
+        record.levelname = f"{log_color}{record.levelname}{self.RESET}"
+        return super().format(record)
+
+
+def setup_logging(
+    level: int = logging.INFO,
+    format_string: str | None = None,
+    debug: bool = False,
+) -> logging.Logger:
+    """Setup application logging."""
+
+    if format_string is None:
+        format_string = (
+            "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
+        )
+
+    root = logging.getLogger()
+    root.setLevel(level if not debug else logging.DEBUG)
+    root.handlers = []
+
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(level)
+    console.setFormatter(ColoredFormatter(format_string))
+    root.addHandler(console)
+
+    if not debug:
+        file_handler = logging.FileHandler("app.log", encoding="utf-8")
+        file_handler.setLevel(logging.WARNING)
+        file_handler.setFormatter(logging.Formatter(format_string))
+        root.addHandler(file_handler)
+
+    return root
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Get logger instance for a module."""
+    return logging.getLogger(name)

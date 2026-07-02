@@ -1,0 +1,16 @@
+"""{{PROJECT_NAME}} application entry point."""
+
+from app.config.settings import get_config
+from app.core.logging import setup_logging, get_logger
+
+
+def main() -> None:
+    """Main entry point."""
+    config = get_config()
+    setup_logging(debug=config.debug)
+    logger = get_logger(__name__)
+    logger.info("Application started.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,88 @@
+"""
+Database connection management.
+Provides connection pooling and session management for MySQL.
+"""
+
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+from app.config.settings import get_config
+from app.core.exceptions import ConnectionError
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+class DatabaseManager:
+    """
+    Manages database connections and connection pooling.
+    Implements singleton pattern.
+    """
+
+    _instance: "DatabaseManager | None" = None
+    _engine = None
+    _session_factory = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def initialize(self) -> None:
+        """Initialize the database engine and session factory."""
+        if self._engine is not None:
+            return
+
+        try:
+            config = get_config()
+            self._engine = create_async_engine(
+                config.db.url,
+                pool_size=config.db.pool_size,
+                pool_pre_ping=True,
+                pool_recycle=3600,
+                echo=config.debug,
+            )
+            self._session_factory = async_sessionmaker(
+                self._engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+                autocommit=False,
+                autoflush=False,
+            )
+            logger.info("Database initialized: %s:%s/%s", config.db.host, config.db.port, config.db.name)
+        except Exception as e:
+            logger.error("Failed to initialize database: %s", e)
+            raise ConnectionError(f"Database initialization failed: {e}")
+
+    @asynccontextmanager
+    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
+        """Get a database session with automatic cleanup."""
+        if self._session_factory is None:
+            self.initialize()
+
+        session: AsyncSession = self._session_factory()
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+    async def close(self) -> None:
+        """Close all database connections."""
+        if self._engine is not None:
+            await self._engine.dispose()
+            self._engine = None
+            self._session_factory = None
+            logger.info("Database connections closed")
+
+
+db_manager = DatabaseManager()

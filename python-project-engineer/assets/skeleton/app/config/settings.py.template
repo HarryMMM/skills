@@ -1,0 +1,57 @@
+"""
+Application configuration using Pydantic Settings.
+Supports .env and environment variables.
+"""
+
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+env_ = BASE_DIR / ".env"
+
+
+class DatabaseSettings(BaseSettings):
+    """Database configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="DB_",
+        extra="ignore",
+        env_file_encoding="utf-8",
+        env_file=str(env_),
+    )
+
+    host: str = "localhost"
+    port: int = 3306
+    user: str = "root"
+    password: str = ""
+    name: str = "app_db"
+    pool_size: int = 5
+
+    @property
+    def url(self) -> str:
+        return (
+            f"mysql+aiomysql://{self.user}:{self.password}"
+            f"@{self.host}:{self.port}/{self.name}?charset=utf8mb4"
+        )
+
+
+class Settings(BaseSettings):
+    """Application settings."""
+
+    model_config = SettingsConfigDict(
+        env_file=str(env_),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_name: str = "{{PROJECT_SLUG}}"
+    debug: bool = False
+    db: DatabaseSettings = DatabaseSettings()
+
+
+@lru_cache()
+def get_config() -> Settings:
+    """Return cached settings singleton."""
+    return Settings()

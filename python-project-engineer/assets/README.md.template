@@ -1,0 +1,22 @@
+# {{PROJECT_NAME}}
+
+## 项目简介
+{{PROJECT_DESCRIPTION}}
+
+## 运行环境
+- Python {{PYTHON_VERSION}}
+
+## 安装依赖
+```bash
+pip install -e .
+```
+
+## 开发环境
+```bash
+pip install -e ".[dev]"
+```
+
+## 启动
+```bash
+python -m app.main
+```
