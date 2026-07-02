@@ -1,0 +1,21 @@
+"""
+MCP Server setup using FastMCP.
+Provides tool registration and SSE/stdio transport.
+"""
+
+from mcp.server.fastmcp import FastMCP
+
+from app.config.settings import get_config
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+config = get_config()
+
+mcp = FastMCP(config.app_name)
+
+
+def run_server() -> None:
+    """Run the MCP server with stdio transport."""
+    logger.info("Starting MCP server: %s", config.app_name)
+    mcp.run()

@@ -1,0 +1,52 @@
+"""
+Example MCP tool — demonstrates tool → service → repository layering.
+Provides database query tools via MCP protocol.
+
+Prerequisites:
+  1. Configure database connection in .env (DB_HOST, DB_PORT, etc.)
+  2. Create the `items` table:
+       CREATE TABLE items (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         name VARCHAR(100) NOT NULL,
+         description TEXT
+       );
+"""
+
+import json
+
+from app.core.logging import get_logger
+from app.core.mcp_server import mcp
+from app.services.example_service import ExampleService
+
+logger = get_logger(__name__)
+
+_service = ExampleService()
+
+
+@mcp.tool()
+async def list_items() -> str:
+    """
+    List all items from the database.
+
+    Returns:
+        JSON string containing all items.
+    """
+    items = await _service.list_items()
+    return json.dumps(items, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def get_item(item_id: int) -> str:
+    """
+    Get a single item by ID from the database.
+
+    Args:
+        item_id: The ID of the item to query.
+
+    Returns:
+        JSON string with the item details, or a not-found message.
+    """
+    item = await _service.get_item(item_id)
+    if item is None:
+        return json.dumps({"error": f"Item with id={item_id} not found"})
+    return json.dumps(item, ensure_ascii=False, indent=2)

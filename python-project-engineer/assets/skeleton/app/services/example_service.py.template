@@ -1,0 +1,29 @@
+"""
+Example service — demonstrates business logic layer.
+"""
+
+from typing import Any
+
+from app.core.logging import get_logger
+from app.repositories.example_repository import ExampleRepository
+
+logger = get_logger(__name__)
+
+_repo = ExampleRepository()
+
+
+class ExampleService:
+    """Example service that queries items via the repository layer."""
+
+    async def list_items(self) -> list[dict[str, Any]]:
+        """List all items."""
+        items = await _repo.find_all()
+        logger.info("Queried %d items", len(items))
+        return items
+
+    async def get_item(self, item_id: int) -> dict[str, Any] | None:
+        """Get a single item by ID."""
+        item = await _repo.find_by_id(item_id)
+        if item is None:
+            logger.warning("Item not found: id=%d", item_id)
+        return item

@@ -1,5 +1,43 @@
 """{{PROJECT_NAME}} application entry point."""
 
+import importlib
+import pkgutil
+
+from app.config.settings import get_config
+from app.core.logging import setup_logging, get_logger
+from app.db.connection import db_manager
+
+
+def _auto_import_tools(package: str = "app.tools") -> None:
+    """Auto-import all modules under app.tools so @mcp.tool() decorators register."""
+    pkg = importlib.import_module(package)
+    for _, module_name, _ in pkgutil.iter_modules(pkg.__path__):
+        importlib.import_module(f"{package}.{module_name}")
+
+
+def main() -> None:
+    """Main entry point — starts the MCP server."""
+    config = get_config()
+    setup_logging(debug=config.debug)
+    logger = get_logger(__name__)
+
+    # Initialize database connection
+    db_manager.initialize()
+    logger.info("Database initialized.")
+
+    # Auto-import tools to register with MCP server
+    _auto_import_tools()
+    logger.info("MCP tools registered.")
+
+    # Start MCP server (stdio transport)
+    from app.core.mcp_server import run_server
+    run_server()
+
+
+if __name__ == "__main__":
+    main()
+"""{{PROJECT_NAME}} application entry point."""
+
 from app.config.settings import get_config
 from app.core.logging import setup_logging, get_logger
 

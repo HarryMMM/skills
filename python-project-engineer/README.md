@@ -46,6 +46,7 @@ tools/api → services → repositories
 - 配置：`pydantic-settings`
 - 日志：标准 `logging` + 彩色 Formatter
 - 数据访问：`SQLAlchemy 2.x` async + `aiomysql`
+- MCP：`mcp` SDK (FastMCP)
 - 格式化：`ruff`（行宽 100）
 
 ## 使用方式
@@ -59,7 +60,7 @@ tools/api → services → repositories
 可选参数：
 - Python 版本（默认 3.13）
 - 包名（默认由项目名规范化）
-- Docker / CI / 测试骨架（默认开启）
+- Docker / 测试骨架（默认开启）
 
 ## 自动验证
 
@@ -88,7 +89,6 @@ python-project-engineer/
 │   ├── Dockerfile.template           # 容器构建
 │   ├── .env.example.template         # 环境变量示例
 │   ├── README.md.template            # 项目说明
-│   ├── ci-github.yml.template        # GitHub Actions CI
 │   ├── .gitignore.template           # Git 忽略规则
 │   └── skeleton/                     # 骨架代码模板
 │       └── app/
@@ -96,8 +96,12 @@ python-project-engineer/
 │           ├── config/settings.py.template
 │           ├── core/logging.py.template
 │           ├── core/exceptions.py.template
+│           ├── core/mcp_server.py.template
 │           ├── db/connection.py.template
-│           └── repositories/base_repository.py.template
+│           ├── repositories/base_repository.py.template
+│           ├── repositories/example_repository.py.template
+│           ├── services/example_service.py.template
+│           └── tools/example_tool.py.template
 └── scripts/                          # 验证脚本
     ├── run_validation.py             # 编排脚本（入口）
     ├── check_structure.py            # 结构检查

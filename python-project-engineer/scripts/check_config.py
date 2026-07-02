@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 REQUIRED = {
-    "pyproject.toml": ["[project]", "requires-python", "pydantic-settings", "SQLAlchemy", "aiomysql"],
+    "pyproject.toml": ["[project]", "requires-python", "pydantic-settings", "SQLAlchemy", "aiomysql", "mcp"],
     ".env.example": ["DB_HOST", "DB_PORT", "DB_USER", "DB_NAME"],
 }
 

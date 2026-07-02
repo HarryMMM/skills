@@ -1,0 +1,27 @@
+"""
+Example repository — demonstrates parameterized database queries.
+Replace with your own repository implementation.
+"""
+
+from typing import Any
+
+from app.core.logging import get_logger
+from app.repositories.base_repository import BaseRepository
+
+logger = get_logger(__name__)
+
+
+class ExampleRepository(BaseRepository):
+    """Example repository for querying the `items` table."""
+
+    async def find_all(self) -> list[dict[str, Any]]:
+        """Return all rows from the items table."""
+        return await self.execute_query("SELECT id, name, description FROM items")
+
+    async def find_by_id(self, item_id: int) -> dict[str, Any] | None:
+        """Return a single item by ID."""
+        results = await self.execute_query(
+            "SELECT id, name, description FROM items WHERE id = :id",
+            {"id": item_id},
+        )
+        return results[0] if results else None
