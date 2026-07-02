@@ -10,6 +10,12 @@
 | `refactor` | 将现有 Python 项目重构为标准结构 |
 | `feature` | 在现有工程中新增功能模块 |
 
+## 安装
+
+```bash
+npx skills add harryMMM/skills --skill python-project-engineer -g
+```
+
 ## 工程标准
 
 ### 目录结构
@@ -99,4 +105,3 @@ python-project-engineer/
     ├── check_style_conventions.py    # 分层/风格检查
     └── smoke_check.py                # 编译/导入冒烟检查
 ```
-# python-project-engineer
