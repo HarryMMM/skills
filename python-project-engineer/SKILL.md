@@ -78,8 +78,6 @@ scripts/
 tests/
 ```
 
-禁止目录：`evaluation/`、`pdm/`
-
 ### 分层约束
 ```
 tools/apis（编排入口）→ services（业务逻辑）→ repositories（数据访问）

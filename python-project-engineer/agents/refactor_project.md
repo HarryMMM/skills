@@ -25,7 +25,6 @@
 **阶段 A：结构调整**
 - 创建缺失目录和 `__init__.py`
 - 移动错位的文件到正确目录
-- 删除禁止目录（`evaluation/`、`pdm/`）
 
 **阶段 B：基础设施**
 - 生成/更新 `pyproject.toml`（从模板）
@@ -45,7 +44,7 @@
 
 ### 6. 执行验证
 运行 `python scripts/run_validation.py <project_root>`，依次检查：
-1. 结构检查 — 目录/文件存在性、禁止目录
+1. 结构检查 — 目录/文件存在性
 2. 配置检查 — pyproject.toml / .env.example 关键配置
 3. 分层/风格检查 — apis/tools/services 分层约束、print 检测
 4. 编译/导入冒烟检查

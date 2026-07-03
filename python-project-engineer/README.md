@@ -75,7 +75,7 @@ tools/apis → services → repositories
 ## 自动验证
 
 每个流程结束后自动运行：
-1. 结构检查 — 目录/文件存在性、禁止目录
+1. 结构检查 — 目录/文件存在性
 2. 配置检查 — pyproject.toml / .env.example 关键配置
 3. 分层/风格检查 — apis/tools/services 分层约束、print 检测
 4. 编译/导入冒烟检查
