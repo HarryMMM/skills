@@ -13,6 +13,7 @@
 | `PROJECT_NAME` | 用户输入 | 项目显示名 |
 | `PROJECT_SLUG` | 项目名 kebab-case 化 | 用于 pyproject.toml name |
 | `PROJECT_DESCRIPTION` | 用户输入 | 一句话描述 |
+| `PROJECT_LOCATION` | 当前目录下新建子目录 | 也可选择直接在当前目录创建 |
 | `PYTHON_VERSION` | `3.13` | 最低 Python 版本 |
 | `AUTHOR_NAME` | 空字符串 | 作者名 |
 
@@ -26,7 +27,11 @@
 将上一步收集到的所有变量值 **及推断的工程形态** 以表格形式展示给用户，等待用户确认无误后才能继续。用户未确认前不得执行后续步骤。
 
 ### 3. 创建目录结构
-按 SKILL.md 中的目录结构创建目录和 `__init__.py` 文件。
+根据 `PROJECT_LOCATION` 确定工程根目录：
+- 默认：在当前目录下创建 `PROJECT_SLUG` 子目录作为工程根目录
+- 用户选择“当前目录”：直接在当前目录创建
+
+按 SKILL.md 中的目录结构在工程根目录下创建目录和 `__init__.py` 文件。
 根据工程形态决定：
 - `mcp` 形态：创建 `app/tools/`，不创建 `app/apis/`
 - `api` 形态：创建 `app/apis/`，不创建 `app/tools/`

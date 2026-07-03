@@ -68,6 +68,7 @@ tools/apis → services → repositories
 3. **工作模式**：`new` / `refactor` / `feature`（必填）
 
 可选参数：
+- 工程创建位置（默认在当前目录下新建子目录，也可选择直接在当前目录创建）
 - Python 版本（默认 3.13）
 - 包名（默认由项目名规范化）
 - Docker / 测试骨架（默认开启）
