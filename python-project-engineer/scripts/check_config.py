@@ -3,8 +3,8 @@ import sys
 from pathlib import Path
 
 REQUIRED = {
-    "pyproject.toml": ["[project]", "requires-python", "pydantic-settings", "SQLAlchemy", "aiomysql", "mcp"],
-    ".env.example": ["DB_HOST", "DB_PORT", "DB_USER", "DB_NAME"],
+    "pyproject.toml": ["[project]", "requires-python", "pydantic-settings", "SQLAlchemy", "aiosqlite", "mcp"],
+    ".env.example": ["DB_URL", "MCP_NAME", "MCP_VERSION", "MCP_PORT", "MCP_TRANSPORT"],
 }
 
 def main() -> int:

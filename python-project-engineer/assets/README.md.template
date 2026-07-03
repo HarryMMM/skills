@@ -21,16 +21,10 @@ pip install -e ".[dev]"
 python -m app.main
 ```
 
-启动后将作为 MCP Server 运行，通过 stdio 传输协议提供工具调用。
+## 测试数据
+项目默认使用内存 SQLite，启动时自动加载 3 条测试数据。
+运行 `python scripts/seed_data.py` 可重新初始化测试数据。
 
-## MCP 示例工具
-项目内置了一个查询 `items` 表的 MCP 示例工具，使用前需要：
-1. 在 `.env` 中配置真实数据库连接信息
-2. 在数据库中创建 `items` 表：
-```sql
-CREATE TABLE items (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  description TEXT
-);
-```
+## 切换到 MySQL
+1. 安装 MySQL 驱动：`pip install -e ".[mysql]"`
+2. 在 `.env` 中设置：`DB_URL=mysql+aiomysql://user:password@host:port/db_name`

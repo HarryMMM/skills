@@ -35,7 +35,7 @@
 **阶段 C：分层代码**
 - 将数据库访问代码迁移到 `repositories/`
 - 将业务逻辑迁移到 `services/`
-- 将对外入口迁移到 `tools/` 或 `api/`
+- 将对外入口迁移到 `tools/` 或 `apis/`
 - 更新所有 import 路径
 
 ### 5. 兼容性处理
@@ -47,7 +47,7 @@
 运行 `python scripts/run_validation.py <project_root>`，依次检查：
 1. 结构检查 — 目录/文件存在性、禁止目录
 2. 配置检查 — pyproject.toml / .env.example 关键配置
-3. 分层/风格检查 — api/tools/services 分层约束、print 检测
+3. 分层/风格检查 — apis/tools/services 分层约束、print 检测
 4. 编译/导入冒烟检查
 
 输出固定三段：自动验证通过 / 自动验证失败或受阻 / 需要人工确认。

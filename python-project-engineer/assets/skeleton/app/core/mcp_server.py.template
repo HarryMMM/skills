@@ -1,21 +1,45 @@
 """
-MCP Server setup using FastMCP.
-Provides tool registration and SSE/stdio transport.
+MCP Server with FastMCP.
+Provides tool registration and transport management.
 """
+
+from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
 from app.config.settings import get_config
 from app.core.logging import get_logger
+from app.utils.loader import auto_import_tools
 
 logger = get_logger(__name__)
 
-config = get_config()
-
-mcp = FastMCP(config.app_name)
+mcp: Optional[FastMCP] = None
 
 
-def run_server() -> None:
-    """Run the MCP server with stdio transport."""
-    logger.info("Starting MCP server: %s", config.app_name)
-    mcp.run()
+def create_mcp_server():
+    """Create and configure MCP server instance."""
+    global mcp
+    config = get_config()
+
+    mcp = FastMCP(
+        config.mcp.name,
+        host="0.0.0.0",
+        port=config.mcp.port,
+    )
+
+    # Auto-import all tool modules under app.tools to register @mcp.tool() decorators
+    auto_import_tools("app.tools")
+
+    logger.info(f"Created MCP server: {config.mcp.name} v{config.mcp.version}")
+
+
+def run_server():
+    """Run the MCP server."""
+    config = get_config()
+    create_mcp_server()
+    logger.info(f"Starting MCP server on transport={config.mcp.transport}")
+    try:
+        mcp.run(transport=config.mcp.transport)
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        raise

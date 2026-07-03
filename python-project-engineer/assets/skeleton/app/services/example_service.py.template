@@ -2,28 +2,40 @@
 Example service — demonstrates business logic layer.
 """
 
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from app.core.logging import get_logger
 from app.repositories.example_repository import ExampleRepository
 
 logger = get_logger(__name__)
 
-_repo = ExampleRepository()
-
 
 class ExampleService:
-    """Example service that queries items via the repository layer."""
+    """
+    Service for item operations.
+    Provides business logic between tools/routes and repositories.
+    """
 
-    async def list_items(self) -> list[dict[str, Any]]:
+    def __init__(self):
+        self._repository = ExampleRepository()
+
+    async def list_items(self) -> List[Dict[str, Any]]:
         """List all items."""
-        items = await _repo.find_all()
-        logger.info("Queried %d items", len(items))
+        items = await self._repository.find_all()
+        logger.info(f"Queried {len(items)} items")
         return items
 
-    async def get_item(self, item_id: int) -> dict[str, Any] | None:
-        """Get a single item by ID."""
-        item = await _repo.find_by_id(item_id)
+    async def get_item(self, item_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get a single item by ID.
+
+        Args:
+            item_id: The item ID to look up
+
+        Returns:
+            Item dict or None if not found
+        """
+        item = await self._repository.find_by_id(item_id)
         if item is None:
-            logger.warning("Item not found: id=%d", item_id)
+            logger.warning(f"Item not found: id={item_id}")
         return item

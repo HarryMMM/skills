@@ -3,14 +3,15 @@ import sys
 from pathlib import Path
 
 REQUIRED_DIRS = [
-    "app", "app/api", "app/config", "app/core", "app/db", "app/models",
-    "app/repositories", "app/services", "app/tools", "app/utils", "tests",
+    "app", "app/config", "app/core", "app/db", "app/models",
+    "app/repositories", "app/services", "app/utils", "tests",
 ]
 REQUIRED_FILES = [
     "app/main.py", "app/config/settings.py", "app/core/logging.py",
     "app/core/exceptions.py", "app/core/mcp_server.py", "app/db/connection.py",
-    "app/repositories/base_repository.py", "pyproject.toml",
-    ".env.example",
+    "app/utils/loader.py", "app/repositories/base_repository.py",
+    "app/repositories/example_repository.py", "app/services/example_service.py",
+    "scripts/seed_data.py", "pyproject.toml", ".env.example",
 ]
 FORBIDDEN_DIRS = ["evaluation", "pdm", "app/evaluation", "app/pdm"]
 

@@ -3,7 +3,7 @@ Base repository for database operations.
 Provides common query execution with parameterized SQL.
 """
 
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class BaseRepository:
     """
-    Generic base repository.
+    Generic base repository for database operations.
 
     Usage:
         class UserRepository(BaseRepository):
@@ -29,19 +29,41 @@ class BaseRepository:
     async def execute_query(
         self,
         sql: str,
-        params: dict[str, Any] | None = None,
-    ) -> list[dict[str, Any]]:
-        """Execute a SELECT query with parameterized SQL."""
+        params: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Execute a SELECT query with parameterized SQL.
+
+        Args:
+            sql: SQL query string (SELECT only)
+            params: Query parameters
+
+        Returns:
+            List of records as dictionaries
+        """
+        params = params or {}
+
         async with db_manager.get_session() as session:
-            result = await session.execute(text(sql), params or {})
+            result = await session.execute(text(sql), params)
             return [dict(zip(result.keys(), row)) for row in result.fetchall()]
 
     async def execute_write(
         self,
         sql: str,
-        params: dict[str, Any] | None = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> int:
-        """Execute an INSERT/UPDATE/DELETE and return affected row count."""
+        """
+        Execute an INSERT/UPDATE/DELETE and return affected row count.
+
+        Args:
+            sql: SQL statement
+            params: Query parameters
+
+        Returns:
+            Number of affected rows
+        """
+        params = params or {}
+
         async with db_manager.get_session() as session:
-            result = await session.execute(text(sql), params or {})
+            result = await session.execute(text(sql), params)
             return result.rowcount

@@ -22,13 +22,20 @@ user-invocable: true
 
 ### 必填
 1. 项目名称
-2. 项目类型或一句话定位
+2. 项目类型或一句话定位（用于推断工程形态，见下方说明）
 3. 工作模式：`new`、`refactor` 或 `feature`
+
+### 工程形态推断
+根据用户的"项目类型或一句话定位"推断需要创建哪些对外接口目录：
+- 包含"MCP"关键词 → 创建 `tools/`（MCP 工具），不创建 `apis/`
+- 包含"REST"/"API"/"HTTP"关键词 → 创建 `apis/`（REST API），不创建 `tools/`
+- 两者都包含或模糊描述 → 同时创建 `tools/` 和 `apis/`
+- 不确定时向用户确认
 
 ### 可选（默认值）
 - Python 版本：默认 `3.13`
 - 包名/模块名：默认由项目名规范化
-- 数据库模板：默认开启（单库）
+- 数据库模板：默认开启（内存 SQLite）
 - Docker：默认开启
 - 测试骨架：默认开启
 - 重构严格度：默认 `compatible`
@@ -40,8 +47,8 @@ user-invocable: true
 app/
   __init__.py
   main.py              # 应用入口
-  api/
-    __init__.py        # REST API 入口
+  apis/                # REST API 路由（仅 api/both 形态）
+    __init__.py
   config/
     __init__.py
     settings.py        # pydantic-settings 配置定义
@@ -49,6 +56,7 @@ app/
     __init__.py
     logging.py         # logging 日志初始化
     exceptions.py      # 自定义异常
+    mcp_server.py      # FastMCP server 实例
   db/
     __init__.py
     connection.py      # SQLAlchemy 引擎/会话
@@ -59,10 +67,13 @@ app/
     base_repository.py # 数据访问层基类
   services/
     __init__.py        # 业务逻辑层
-  tools/
-    __init__.py        # 对外调用入口（编排层）
+  tools/               # MCP 工具（仅 mcp/both 形态）
+    __init__.py
   utils/
-    __init__.py        # 通用工具函数
+    __init__.py
+    loader.py          # 自动加载工具模块
+scripts/
+  seed_data.py         # 数据库建表 + 种子数据
 tests/
 ```
 
@@ -70,47 +81,51 @@ tests/
 
 ### 分层约束
 ```
-tools/api（编排入口）→ services（业务逻辑）→ repositories（数据访问）
+tools/apis（编排入口）→ services（业务逻辑）→ repositories（数据访问）
 ```
 - tools：MCP 工具，仅做对外编排，**禁止直接访问数据库**
-- api：REST API，仅做对外编排，**禁止直接访问数据库**
+- apis：REST API，仅做对外编排，**禁止直接访问数据库**
 - services：实现业务逻辑，**禁止直接执行 SQL**
 - repositories：承担所有数据库访问，SQL **必须参数化**
 
 ### 技术栈与约束
 | 领域 | 选型 | 备注 |
 |---|---|---|
-| 配置 | `pydantic-settings` | 配置外置，提供 `.env.example`，禁止硬编码密钥 |
+| 配置 | `pydantic-settings` | 域分离，提供 `.env.example`，禁止硬编码密钥 |
 | 日志 | 标准 `logging` + 彩色 Formatter | 禁止运行时 `print` |
 | 数据访问 | `SQLAlchemy 2.x` async | 参数化 SQL，禁止拼接 |
+| 默认数据库 | `aiosqlite`（内存 SQLite） | 开箱即用，可切换 MySQL |
 | 异常 | 显式抛出 | 禁止吞异常、禁止静默失败 |
 | 代码完整性 | 禁止 TODO/占位 | 所有实现必须完整可运行 |
-| MCP | `mcp` SDK (FastMCP) | stdio 传输，自动注册 tools |
+| MCP | `mcp` SDK (FastMCP) | 自动注册 tools，支持 stdio/SSE |
+| REST API | `FastAPI` + `uvicorn` | 仅 api/both 形态需要 |
 | 格式化 | `ruff` | 行宽 100 |
 
 ### 建议最小配置项
 ```env
 DEBUG=false
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=app_db
+DB_URL=sqlite+aiosqlite:///:memory:
+MCP_NAME=app-name
+MCP_VERSION=1.0.0
+MCP_PORT=18001
+MCP_TRANSPORT=stdio
 ```
 
 ### 依赖基线
-- 核心：`pydantic`、`pydantic-settings`、`SQLAlchemy[asyncio]`、`aiomysql`、`mcp`
+- 核心：`pydantic`、`pydantic-settings`、`SQLAlchemy[asyncio]`、`aiosqlite`、`mcp`
+- 可选 MySQL：`aiomysql`
+- 可选 REST API：`fastapi`、`uvicorn`
 - 测试：`pytest`、`pytest-asyncio`
 - 版本策略：稳定兼容优先，Python 默认 3.13
 
 ## 执行流程
 
 ### new：新建工程
-1. 收集必填信息，应用默认值
-2. **向用户展示收集到的信息，等待用户确认无误后继续**
-3. 创建标准目录结构
+1. 收集必填信息，推断工程形态，应用默认值
+2. **向用户展示收集到的信息（含推断的工程形态），等待用户确认无误后继续**
+3. 创建标准目录结构（根据工程形态决定 tools/ 和 apis/）
 4. 从 [assets](./assets/) 生成模板文件（替换占位变量）
-5. 生成基础骨架代码
+5. 复制骨架代码 + 运行 seed_data.py 初始化测试数据
 6. 执行验证流程
 7. 输出结果与人工复核清单
 
@@ -126,7 +141,7 @@ DB_NAME=app_db
 ### feature：新特性开发
 1. 明确特性目标、输入输出与边界条件
 2. **向用户展示需求分析结果，等待用户确认无误后继续**
-3. 识别影响范围与落点文件（tool/service/repository）
+3. 识别影响范围与落点文件（tool/route/service/repository）
 4. 按分层约束实现功能
 5. 补充必要测试或最小验证样例
 6. 执行验证流程
@@ -168,13 +183,16 @@ python scripts/run_validation.py <project_root>
 直接复制到目标项目，无需生成：
 | 文件 | 用途 |
 |---|---|
-| `app/main.py.template` | 应用入口（启动 MCP server） |
-| `app/config/settings.py.template` | pydantic-settings 配置 |
+| `app/main.py.template` | 应用入口 |
+| `app/config/settings.py.template` | pydantic-settings 域分离配置 |
 | `app/core/logging.py.template` | logging 日志初始化 |
 | `app/core/exceptions.py.template` | 自定义异常体系 |
-| `app/core/mcp_server.py.template` | FastMCP server 实例 |
-| `app/db/connection.py.template` | SQLAlchemy 引擎/会话 |
+| `app/core/mcp_server.py.template` | FastMCP server（create + run 分离） |
+| `app/db/connection.py.template` | SQLAlchemy 引擎/会话（支持 SQLite/MySQL） |
+| `app/utils/loader.py.template` | auto_import_tools 自动加载 |
 | `app/repositories/base_repository.py.template` | 数据访问层基类 |
 | `app/repositories/example_repository.py.template` | 示例 repository（查 items 表） |
 | `app/services/example_service.py.template` | 示例 service |
 | `app/tools/example_tool.py.template` | 示例 MCP tool（查数据库） |
+| `app/apis/example_router.py.template` | 示例 FastAPI 路由（查数据库） |
+| `scripts/seed_data.py.template` | 建表 + 种子数据（3 条测试数据） |

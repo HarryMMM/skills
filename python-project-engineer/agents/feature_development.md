@@ -19,7 +19,7 @@
 
 | 代码类型 | 放置目录 | 示例 |
 |---|---|---|
-| 对外入口/编排 | `app/tools/` 或 `app/api/` | 新增工具方法、REST 接口 |
+| 对外入口/编排 | `app/tools/` 或 `app/apis/` | 新增工具方法、REST 接口 |
 | 业务逻辑 | `app/services/` | 新增业务处理类 |
 | 数据访问 | `app/repositories/` | 新增数据查询 |
 | 数据模型 | `app/models/` | 新增模型定义 |
@@ -45,7 +45,7 @@
 运行 `python scripts/run_validation.py <project_root>`，依次检查：
 1. 结构检查 — 目录/文件存在性、禁止目录
 2. 配置检查 — pyproject.toml / .env.example 关键配置
-3. 分层/风格检查 — api/tools/services 分层约束、print 检测
+3. 分层/风格检查 — apis/tools/services 分层约束、print 检测
 4. 编译/导入冒烟检查
 
 输出固定三段：自动验证通过 / 自动验证失败或受阻 / 需要人工确认。

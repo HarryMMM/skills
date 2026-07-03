@@ -6,6 +6,31 @@ Custom exceptions for the application.
 class AppError(Exception):
     """Base application error."""
 
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+class QueryError(AppError):
+    """SQL query execution error."""
+
+    def __init__(self, message: str, sql: str = None):
+        self.sql = sql
+        super().__init__(message)
+
+
+class ConnectionError(AppError):
+    """External service connection failed."""
+
+    pass
+"""
+Custom exceptions for the application.
+"""
+
+
+class AppError(Exception):
+    """Base application error."""
+
     def __init__(self, message: str, code: str | None = None):
         self.message = message
         self.code = code

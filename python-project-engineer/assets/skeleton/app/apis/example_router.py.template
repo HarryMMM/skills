@@ -1,0 +1,35 @@
+"""
+Example FastAPI router — demonstrates apis/ → services → repositories layering.
+Mirrors the MCP tool example with REST API endpoints.
+"""
+
+from fastapi import APIRouter
+
+from app.core.logging import get_logger
+from app.services.example_service import ExampleService
+
+logger = get_logger(__name__)
+
+router = APIRouter(prefix="/items", tags=["items"])
+_service = ExampleService()
+
+
+@router.get("/")
+async def list_items():
+    """List all items from the database."""
+    items = await _service.list_items()
+    return items
+
+
+@router.get("/{item_id}")
+async def get_item(item_id: int):
+    """
+    Get a single item by ID.
+
+    Args:
+        item_id: The ID of the item to query.
+    """
+    item = await _service.get_item(item_id)
+    if item is None:
+        return {"error": f"Item with id={item_id} not found"}
+    return item

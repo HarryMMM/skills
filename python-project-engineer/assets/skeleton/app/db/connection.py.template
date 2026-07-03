@@ -1,11 +1,13 @@
 """
 Database connection management.
-Provides connection pooling and session management for MySQL.
+Provides connection pooling and session management.
+Supports MySQL (aiomysql) and SQLite (aiosqlite).
 """
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -22,10 +24,10 @@ logger = get_logger(__name__)
 class DatabaseManager:
     """
     Manages database connections and connection pooling.
-    Implements singleton pattern.
+    Implements singleton pattern for connection pool reuse.
     """
 
-    _instance: "DatabaseManager | None" = None
+    _instance: Optional["DatabaseManager"] = None
     _engine = None
     _session_factory = None
 
@@ -34,20 +36,26 @@ class DatabaseManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize(self) -> None:
+    def initialize(self):
         """Initialize the database engine and session factory."""
         if self._engine is not None:
             return
 
         try:
             config = get_config()
-            self._engine = create_async_engine(
-                config.db.url,
-                pool_size=config.db.pool_size,
-                pool_pre_ping=True,
-                pool_recycle=3600,
-                echo=config.debug,
-            )
+            db_url = config.db.url
+
+            # SQLite doesn't support pool_size
+            engine_kwargs = {
+                "pool_pre_ping": True,
+                "echo": config.debug,
+            }
+            if not db_url.startswith("sqlite"):
+                engine_kwargs["pool_size"] = config.db.pool_size
+                engine_kwargs["pool_recycle"] = 3600
+
+            self._engine = create_async_engine(db_url, **engine_kwargs)
+
             self._session_factory = async_sessionmaker(
                 self._engine,
                 class_=AsyncSession,
@@ -55,28 +63,39 @@ class DatabaseManager:
                 autocommit=False,
                 autoflush=False,
             )
-            logger.info("Database initialized: %s:%s/%s", config.db.host, config.db.port, config.db.name)
+
+            logger.info(f"Database initialized: {db_url}")
+
         except Exception as e:
-            logger.error("Failed to initialize database: %s", e)
-            raise ConnectionError(f"Database initialization failed: {e}")
+            logger.error(f"Failed to initialize database: {e}")
+            raise ConnectionError(f"Database initialization failed: {str(e)}")
 
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
-        """Get a database session with automatic cleanup."""
+        """
+        Get a database session with automatic cleanup.
+
+        Yields:
+            AsyncSession: Database session
+        """
         if self._session_factory is None:
             self.initialize()
 
         session: AsyncSession = self._session_factory()
+
         try:
             yield session
             await session.commit()
-        except Exception:
+
+        except Exception as e:
             await session.rollback()
+            logger.error(f"Session error: {e}")
             raise
+
         finally:
             await session.close()
 
-    async def close(self) -> None:
+    async def close(self):
         """Close all database connections."""
         if self._engine is not None:
             await self._engine.dispose()
@@ -84,5 +103,33 @@ class DatabaseManager:
             self._session_factory = None
             logger.info("Database connections closed")
 
+    async def health_check(self) -> bool:
+        """
+        Check database connectivity.
 
+        Returns:
+            True if database is accessible
+        """
+        try:
+            async with self.get_session() as session:
+                result = await session.execute(text("SELECT 1"))
+                return result.scalar() == 1
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return False
+
+
+# Global database manager instance
 db_manager = DatabaseManager()
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Dependency for getting database session.
+    Use with FastAPI or other async frameworks.
+
+    Yields:
+        AsyncSession: Database session
+    """
+    async with db_manager.get_session() as session:
+        yield session

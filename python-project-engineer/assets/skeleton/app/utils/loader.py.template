@@ -1,0 +1,17 @@
+"""Auto-import utility for tool modules."""
+
+import importlib
+import pkgutil
+
+
+def auto_import_tools(package_name: str):
+    """
+    Auto-import all modules under a package to trigger decorator registration.
+
+    Args:
+        package_name: Dotted package path, e.g. "app.tools"
+    """
+    package = importlib.import_module(package_name)
+
+    for _, module_name, _ in pkgutil.iter_modules(package.__path__):
+        importlib.import_module(f"{package_name}.{module_name}")
