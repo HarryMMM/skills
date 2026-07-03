@@ -25,14 +25,14 @@ app/
   apis/                # REST API 路由（按形态可选）
   config/              # pydantic-settings 配置
   core/                # 日志 / 异常 / MCP server
-  db/                  # SQLAlchemy async 连接管理
+  db/                  # SQLAlchemy async 连接管理 + 种子数据
   models/              # 数据模型
   repositories/        # 数据访问层
   services/            # 业务逻辑层
   tools/               # MCP 工具（按形态可选）
   utils/               # 通用工具
 scripts/
-  seed_data.py         # 建表 + 种子数据
+  seed_data.py         # 种子数据独立入口
 tests/
 ```
 
@@ -108,6 +108,7 @@ python-project-engineer/
 │       │   ├── core/exceptions.py.template
 │       │   ├── core/mcp_server.py.template
 │       │   ├── db/connection.py.template
+│       │   ├── db/seed.py.template
 │       │   ├── utils/loader.py.template
 │       │   ├── repositories/base_repository.py.template
 │       │   ├── repositories/example_repository.py.template

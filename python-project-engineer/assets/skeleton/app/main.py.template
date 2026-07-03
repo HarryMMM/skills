@@ -1,5 +1,34 @@
 """{{PROJECT_NAME}} application entry point."""
 
+import asyncio
+
+from app.core.logging import setup_logging
+
+
+def main():
+    """Main entry point."""
+    from app.config.settings import get_config
+    config = get_config()
+    setup_logging(debug=config.debug)
+
+    # Initialize database
+    from app.db.connection import db_manager
+    db_manager.initialize()
+
+    # Auto-seed when using in-memory SQLite (process-level database)
+    if config.db.url.startswith("sqlite"):
+        from app.db.seed import seed_database
+        asyncio.run(seed_database())
+
+    # Start MCP server
+    from app.core.mcp_server import run_server
+    run_server()
+
+
+if __name__ == "__main__":
+    main()
+"""{{PROJECT_NAME}} application entry point."""
+
 from app.core.logging import setup_logging
 
 

@@ -1,0 +1,58 @@
+"""
+Database seed module.
+Creates tables and inserts test data.
+Called automatically on startup when using in-memory SQLite,
+or manually via `python scripts/seed_data.py`.
+"""
+
+from sqlalchemy import text
+
+from app.core.logging import get_logger
+from app.db.connection import db_manager
+
+logger = get_logger(__name__)
+
+# SQLite-compatible DDL (also works with MySQL)
+CREATE_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT
+)
+"""
+
+# MySQL version (use this when switching to MySQL):
+# CREATE_TABLE_SQL = """
+# CREATE TABLE IF NOT EXISTS items (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     name VARCHAR(100) NOT NULL,
+#     description TEXT
+# )
+# """
+
+SEED_DATA = [
+    {"name": "示例工具 A", "description": "这是一个示例工具，用于演示 MCP/REST 查询流程"},
+    {"name": "示例工具 B", "description": "支持参数化查询，数据来自内存数据库"},
+    {"name": "示例工具 C", "description": "你可以根据此模板扩展自己的业务表"},
+]
+
+INSERT_SQL = "INSERT INTO items (name, description) VALUES (:name, :description)"
+
+
+async def seed_database():
+    """Create tables and insert seed data if not already present."""
+    async with db_manager.get_session() as session:
+        # Create table
+        await session.execute(text(CREATE_TABLE_SQL))
+
+        # Check if data already exists
+        result = await session.execute(text("SELECT COUNT(*) FROM items"))
+        count = result.scalar()
+        if count and count > 0:
+            logger.info(f"Items table already has {count} rows, skipping seed.")
+            return
+
+        # Insert seed data
+        for item in SEED_DATA:
+            await session.execute(text(INSERT_SQL), item)
+        logger.info(f"Seeded {len(SEED_DATA)} items into 'items' table.")

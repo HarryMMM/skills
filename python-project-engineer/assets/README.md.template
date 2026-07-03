@@ -22,8 +22,9 @@ python -m app.main
 ```
 
 ## 测试数据
-项目默认使用内存 SQLite，启动时自动加载 3 条测试数据。
-运行 `python scripts/seed_data.py` 可重新初始化测试数据。
+项目默认使用内存 SQLite，启动时自动建表并加载 3 条测试数据，无需手动初始化。
+
+如需重新初始化，可运行：`python scripts/seed_data.py`
 
 ## 切换到 MySQL
 1. 安装 MySQL 驱动：`pip install -e ".[mysql]"`

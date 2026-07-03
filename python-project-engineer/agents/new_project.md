@@ -52,6 +52,7 @@
 - `app/core/exceptions.py.template` → `app/core/exceptions.py`
 - `app/core/mcp_server.py.template` → `app/core/mcp_server.py`
 - `app/db/connection.py.template` → `app/db/connection.py`
+- `app/db/seed.py.template` → `app/db/seed.py`
 - `app/utils/loader.py.template` → `app/utils/loader.py`
 - `app/repositories/base_repository.py.template` → `app/repositories/base_repository.py`
 - `app/repositories/example_repository.py.template` → `app/repositories/example_repository.py`
@@ -71,8 +72,9 @@
 - `api` 或 `both`：`app/apis/__init__.py`
 
 ### 6. 初始化测试数据
-运行 `python scripts/seed_data.py` 在内存数据库中创建 `items` 表并插入 3 条测试数据。
-默认使用内存 SQLite，无需用户额外配置即可验证 MCP → service → repository 完整流程。
+应用启动时（`python -m app.main`）会自动检测内存 SQLite 并执行建表 + 种子数据填充，无需手动运行脚本。
+
+如需单独重新初始化，可运行：`python scripts/seed_data.py`
 
 ### 7. 执行验证
 运行 `python scripts/run_validation.py <project_root>`，依次检查：

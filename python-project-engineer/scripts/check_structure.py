@@ -9,7 +9,7 @@ REQUIRED_DIRS = [
 REQUIRED_FILES = [
     "app/main.py", "app/config/settings.py", "app/core/logging.py",
     "app/core/exceptions.py", "app/core/mcp_server.py", "app/db/connection.py",
-    "app/utils/loader.py", "app/repositories/base_repository.py",
+    "app/db/seed.py", "app/utils/loader.py", "app/repositories/base_repository.py",
     "app/repositories/example_repository.py", "app/services/example_service.py",
     "scripts/seed_data.py", "pyproject.toml", ".env.example",
 ]

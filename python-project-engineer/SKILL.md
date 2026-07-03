@@ -60,6 +60,7 @@ app/
   db/
     __init__.py
     connection.py      # SQLAlchemy 引擎/会话
+    seed.py            # 建表 + 种子数据逻辑
   models/
     __init__.py        # 数据模型定义
   repositories/
@@ -73,7 +74,7 @@ app/
     __init__.py
     loader.py          # 自动加载工具模块
 scripts/
-  seed_data.py         # 数据库建表 + 种子数据
+  seed_data.py         # 种子数据独立入口（调用 app.db.seed）
 tests/
 ```
 
@@ -125,7 +126,7 @@ MCP_TRANSPORT=stdio
 2. **向用户展示收集到的信息（含推断的工程形态），等待用户确认无误后继续**
 3. 创建标准目录结构（根据工程形态决定 tools/ 和 apis/）
 4. 从 [assets](./assets/) 生成模板文件（替换占位变量）
-5. 复制骨架代码 + 运行 seed_data.py 初始化测试数据
+5. 复制骨架代码（启动时自动 seed，无需手动运行 seed_data.py）
 6. 执行验证流程
 7. 输出结果与人工复核清单
 
@@ -189,10 +190,11 @@ python scripts/run_validation.py <project_root>
 | `app/core/exceptions.py.template` | 自定义异常体系 |
 | `app/core/mcp_server.py.template` | FastMCP server（create + run 分离） |
 | `app/db/connection.py.template` | SQLAlchemy 引擎/会话（支持 SQLite/MySQL） |
+| `app/db/seed.py.template` | 建表 + 种子数据逻辑（启动时自动调用） |
 | `app/utils/loader.py.template` | auto_import_tools 自动加载 |
 | `app/repositories/base_repository.py.template` | 数据访问层基类 |
 | `app/repositories/example_repository.py.template` | 示例 repository（查 items 表） |
 | `app/services/example_service.py.template` | 示例 service |
 | `app/tools/example_tool.py.template` | 示例 MCP tool（查数据库） |
 | `app/apis/example_router.py.template` | 示例 FastAPI 路由（查数据库） |
-| `scripts/seed_data.py.template` | 建表 + 种子数据（3 条测试数据） |
+| `scripts/seed_data.py.template` | 种子数据独立入口（调用 app.db.seed） |
