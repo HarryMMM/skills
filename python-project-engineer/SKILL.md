@@ -97,7 +97,7 @@ tools/apis（编排入口）→ services（业务逻辑）→ repositories（数
 | 默认数据库 | `aiosqlite`（内存 SQLite） | 开箱即用，可切换 MySQL |
 | 异常 | 显式抛出 | 禁止吞异常、禁止静默失败 |
 | 代码完整性 | 禁止 TODO/占位 | 所有实现必须完整可运行 |
-| MCP | `mcp` SDK (FastMCP) | 自动注册 tools，支持 stdio/SSE |
+| MCP | `mcp` SDK (FastMCP) | 自动注册 tools，默认 streamable-http |
 | REST API | `FastAPI` + `uvicorn` | 仅 api/both 形态需要 |
 | 格式化 | `ruff` | 行宽 100 |
 
@@ -108,7 +108,7 @@ DB_URL=sqlite+aiosqlite:///:memory:
 MCP_NAME=app-name
 MCP_VERSION=1.0.0
 MCP_PORT=18001
-MCP_TRANSPORT=stdio
+MCP_TRANSPORT=streamable-http
 ```
 
 ### 依赖基线
