@@ -18,6 +18,121 @@ from pygments.lexers import get_lexer_by_name
 from pygments.lexers.special import TextLexer
 
 
+def _prompt_text(message: str, default: Optional[str] = None) -> str:
+    suffix = f" [{default}]" if default else ""
+    value = input(f"{message}{suffix}: ").strip()
+    if not value and default is not None:
+        return default
+    return value
+
+
+def _prompt_yes_no(message: str, default: bool) -> bool:
+    hint = "Y/n" if default else "y/N"
+    while True:
+        value = input(f"{message} ({hint}): ").strip().lower()
+        if not value:
+            return default
+        if value in {"y", "yes"}:
+            return True
+        if value in {"n", "no"}:
+            return False
+        print("Please enter y or n.")
+
+
+def _prompt_choice(message: str, choices: list[str], default: str) -> str:
+    options = "/".join(choices)
+    while True:
+        value = input(f"{message} ({options}) [{default}]: ").strip().lower()
+        if not value:
+            return default
+        if value in choices:
+            return value
+        print(f"Please choose one of: {options}")
+
+
+def _run_interactive_wizard() -> dict[str, object]:
+    print("Markdown to PDF interactive setup")
+    mode = _prompt_choice("Conversion mode", ["single", "batch"], "single")
+    config: dict[str, object] = {}
+
+    if mode == "single":
+        while True:
+            input_path = _prompt_text("Input markdown file path")
+            if input_path and Path(input_path).is_file():
+                config["input"] = input_path
+                break
+            print("File not found. Please enter a valid markdown file path.")
+        output_path = _prompt_text("Output PDF path (leave empty for default)")
+        if output_path:
+            config["output"] = output_path
+    else:
+        while True:
+            batch_dir = _prompt_text("Batch directory path")
+            if batch_dir and Path(batch_dir).is_dir():
+                config["batch_dir"] = batch_dir
+                break
+            print("Directory not found. Please enter a valid directory.")
+        config["batch_glob"] = _prompt_text("Batch glob pattern", "*.md")
+        output_dir = _prompt_text("Output directory (leave empty to reuse batch dir)")
+        if output_dir:
+            config["output_dir"] = output_dir
+        config["continue_on_error"] = _prompt_yes_no("Continue when one file fails", True)
+        config["skip_up_to_date"] = _prompt_yes_no("Skip files that are already up-to-date", True)
+        retry_report = _prompt_text("Retry failed from report path (optional)")
+        if retry_report:
+            config["retry_failed_from"] = retry_report
+
+    config["theme"] = _prompt_choice("Theme", ["default", "business", "academic", "tech"], "business")
+    custom_style = _prompt_text("Custom CSS path (optional)")
+    if custom_style:
+        config["style"] = custom_style
+
+    config["toc"] = _prompt_yes_no("Enable table of contents", True)
+    config["cover"] = _prompt_yes_no("Enable cover page", False)
+    if bool(config["cover"]):
+        cover_title = _prompt_text("Cover title (optional)")
+        cover_subtitle = _prompt_text("Cover subtitle (optional)")
+        cover_author = _prompt_text("Cover author (optional)")
+        cover_version = _prompt_text("Cover version (optional)")
+        cover_date = _prompt_text("Cover date (optional, example 2026-07-07)")
+        if cover_title:
+            config["cover_title"] = cover_title
+        if cover_subtitle:
+            config["cover_subtitle"] = cover_subtitle
+        if cover_author:
+            config["cover_author"] = cover_author
+        if cover_version:
+            config["cover_version"] = cover_version
+        if cover_date:
+            config["cover_date"] = cover_date
+
+    config["header_footer"] = _prompt_yes_no("Enable header and footer", True)
+    if bool(config["header_footer"]):
+        header_text = _prompt_text("Header text (optional)")
+        footer_text = _prompt_text("Footer text (optional)")
+        footer_style = _prompt_choice("Footer style", ["page-total", "page-number", "none"], "page-total")
+        if header_text:
+            config["header_text"] = header_text
+        if footer_text:
+            config["footer_text"] = footer_text
+        config["footer_style"] = footer_style
+
+    config["browser_channel"] = _prompt_choice(
+        "Browser channel",
+        ["chromium", "chrome", "msedge"],
+        "chromium",
+    )
+    executable_path = _prompt_text("Browser executable path (optional)")
+    if executable_path:
+        config["executable_path"] = executable_path
+
+    report_path = _prompt_text("JSON report path (optional)")
+    if report_path:
+        config["report"] = report_path
+
+    return config
+
+
 def _highlight_code(code: str, lang: str | None, _attrs: str | None) -> str:
     lexer = TextLexer()
     if lang:
@@ -458,6 +573,12 @@ def _is_up_to_date(input_md: Path, output_pdf: Path) -> bool:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Convert Markdown to a polished PDF file.")
     parser.add_argument("--config", type=Path, help="Path to JSON config file")
+    parser.add_argument(
+        "--interactive",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Run interactive wizard mode",
+    )
     parser.add_argument("input", nargs="?", type=Path, help="Path to input markdown file")
     parser.add_argument("--batch-dir", type=Path, help="Directory containing markdown files")
     parser.add_argument(
@@ -554,47 +675,56 @@ def main() -> None:
     args = parse_args()
     config: dict[str, object] = _load_config(args.config) if args.config is not None else {}
 
-    input_path = _to_optional_path(_pick_value(args.input, config, "input", None), "input")
-    batch_dir = _to_optional_path(_pick_value(args.batch_dir, config, "batch_dir", None), "batch_dir")
-    batch_glob_raw = _pick_value(args.batch_glob, config, "batch_glob", "*.md")
+    should_start_interactive = bool(args.interactive) or (
+        args.interactive is None
+        and args.config is None
+        and args.input is None
+        and args.batch_dir is None
+    )
+    wizard_config: dict[str, object] = _run_interactive_wizard() if should_start_interactive else {}
+    merged_config = {**config, **wizard_config}
+
+    input_path = _to_optional_path(_pick_value(args.input, merged_config, "input", None), "input")
+    batch_dir = _to_optional_path(_pick_value(args.batch_dir, merged_config, "batch_dir", None), "batch_dir")
+    batch_glob_raw = _pick_value(args.batch_glob, merged_config, "batch_glob", "*.md")
     if not isinstance(batch_glob_raw, str) or not batch_glob_raw.strip():
         raise ValueError("Config field 'batch_glob' must be a non-empty string")
     batch_glob = batch_glob_raw
 
-    output_dir = _to_optional_path(_pick_value(args.output_dir, config, "output_dir", None), "output_dir")
-    continue_on_error = _pick_bool(args.continue_on_error, config, "continue_on_error", False)
-    skip_up_to_date = _pick_bool(args.skip_up_to_date, config, "skip_up_to_date", False)
+    output_dir = _to_optional_path(_pick_value(args.output_dir, merged_config, "output_dir", None), "output_dir")
+    continue_on_error = _pick_bool(args.continue_on_error, merged_config, "continue_on_error", False)
+    skip_up_to_date = _pick_bool(args.skip_up_to_date, merged_config, "skip_up_to_date", False)
     retry_failed_from = _to_optional_path(
-        _pick_value(args.retry_failed_from, config, "retry_failed_from", None),
+        _pick_value(args.retry_failed_from, merged_config, "retry_failed_from", None),
         "retry_failed_from",
     )
-    report_path = _to_optional_path(_pick_value(args.report, config, "report", None), "report")
-    output_path = _to_optional_path(_pick_value(args.output, config, "output", None), "output")
-    style_path = _to_optional_path(_pick_value(args.style, config, "style", None), "style")
+    report_path = _to_optional_path(_pick_value(args.report, merged_config, "report", None), "report")
+    output_path = _to_optional_path(_pick_value(args.output, merged_config, "output", None), "output")
+    style_path = _to_optional_path(_pick_value(args.style, merged_config, "style", None), "style")
 
-    theme_raw = _pick_value(args.theme, config, "theme", "default")
+    theme_raw = _pick_value(args.theme, merged_config, "theme", "default")
     if not isinstance(theme_raw, str) or theme_raw not in {"default", "business", "academic", "tech"}:
         raise ValueError("Config field 'theme' must be one of: default, business, academic, tech")
     theme = theme_raw
 
-    include_toc = _pick_bool(args.toc, config, "toc", True)
-    include_cover = _pick_bool(args.cover, config, "cover", False)
+    include_toc = _pick_bool(args.toc, merged_config, "toc", True)
+    include_cover = _pick_bool(args.cover, merged_config, "cover", False)
 
-    cover_title = _to_optional_str(_pick_value(args.cover_title, config, "cover_title", None), "cover_title")
+    cover_title = _to_optional_str(_pick_value(args.cover_title, merged_config, "cover_title", None), "cover_title")
     cover_subtitle = _to_optional_str(
-        _pick_value(args.cover_subtitle, config, "cover_subtitle", None), "cover_subtitle"
+        _pick_value(args.cover_subtitle, merged_config, "cover_subtitle", None), "cover_subtitle"
     )
-    cover_author = _to_optional_str(_pick_value(args.cover_author, config, "cover_author", None), "cover_author")
+    cover_author = _to_optional_str(_pick_value(args.cover_author, merged_config, "cover_author", None), "cover_author")
     cover_version = _to_optional_str(
-        _pick_value(args.cover_version, config, "cover_version", None), "cover_version"
+        _pick_value(args.cover_version, merged_config, "cover_version", None), "cover_version"
     )
-    cover_date = _to_optional_str(_pick_value(args.cover_date, config, "cover_date", None), "cover_date")
+    cover_date = _to_optional_str(_pick_value(args.cover_date, merged_config, "cover_date", None), "cover_date")
 
-    include_header_footer = _pick_bool(args.header_footer, config, "header_footer", True)
-    header_text = _to_optional_str(_pick_value(args.header_text, config, "header_text", None), "header_text")
-    footer_text = _to_optional_str(_pick_value(args.footer_text, config, "footer_text", None), "footer_text")
+    include_header_footer = _pick_bool(args.header_footer, merged_config, "header_footer", True)
+    header_text = _to_optional_str(_pick_value(args.header_text, merged_config, "header_text", None), "header_text")
+    footer_text = _to_optional_str(_pick_value(args.footer_text, merged_config, "footer_text", None), "footer_text")
 
-    footer_style_raw = _pick_value(args.footer_style, config, "footer_style", "page-total")
+    footer_style_raw = _pick_value(args.footer_style, merged_config, "footer_style", "page-total")
     if not isinstance(footer_style_raw, str) or footer_style_raw not in {
         "page-total",
         "page-number",
@@ -603,13 +733,13 @@ def main() -> None:
         raise ValueError("Config field 'footer_style' must be one of: page-total, page-number, none")
     footer_style = footer_style_raw
 
-    browser_channel_raw = _pick_value(args.browser_channel, config, "browser_channel", "chromium")
+    browser_channel_raw = _pick_value(args.browser_channel, merged_config, "browser_channel", "chromium")
     if not isinstance(browser_channel_raw, str) or browser_channel_raw not in {"chromium", "chrome", "msedge"}:
         raise ValueError("Config field 'browser_channel' must be one of: chromium, chrome, msedge")
     browser_channel = browser_channel_raw
 
     executable_path = _to_optional_path(
-        _pick_value(args.executable_path, config, "executable_path", None), "executable_path"
+        _pick_value(args.executable_path, merged_config, "executable_path", None), "executable_path"
     )
 
     if batch_dir is not None:
