@@ -5,6 +5,7 @@ import datetime as dt
 import html
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -681,6 +682,11 @@ def main() -> None:
         and args.input is None
         and args.batch_dir is None
     )
+    if should_start_interactive and not sys.stdin.isatty():
+        raise SystemExit(
+            "Interactive mode requires a terminal. "
+            "For automation or agent use, pass explicit CLI options or a JSON config file."
+        )
     wizard_config: dict[str, object] = _run_interactive_wizard() if should_start_interactive else {}
     merged_config = {**config, **wizard_config}
 

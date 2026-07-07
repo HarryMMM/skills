@@ -23,57 +23,60 @@ npx skills add harryMMM/skills --skill markdown-to-pdf -g
 ```
 
 Install runtime dependencies:
-```bash
-pip install -r requirements.txt
+```powershell
+pip install -r .\requirements.txt
 playwright install chromium
 ```
 
 ## Usage
-### Scenario: You want a guided flow (recommended for new users)
-Use interactive mode. It asks questions step by step and builds options for you.
-```bash
-python scripts/md_to_pdf.py --interactive
+### Agent usage rule
+Do not run `--interactive` from an agent or automation. Agent tool sessions cannot reliably answer Python `input()` prompts, so interactive mode may hang or fail. If user choices are needed, ask the user in chat first, then run the script with explicit CLI options or `--config`.
+
+### Scenario: Human terminal guided flow
+Use interactive mode only when a human is running the command in a real terminal. It asks questions step by step and builds options for you.
+```powershell
+python .\scripts\md_to_pdf.py --interactive
 ```
 
 ### Scenario: Quick single-file conversion
 Use defaults (TOC on, clean layout, Chromium rendering).
-```bash
-python scripts/md_to_pdf.py ./docs/spec.md
+```powershell
+python .\scripts\md_to_pdf.py .\docs\spec.md
 ```
 
 ### Scenario: Publish-ready report (cover + business style + page footer)
-```bash
-python scripts/md_to_pdf.py ./docs/spec.md \
-	--theme business \
-	--cover --cover-author "Team A" --cover-version "v2" \
-	--header-text "Quarterly Report" --footer-text "Internal" --footer-style page-number
+```powershell
+python .\scripts\md_to_pdf.py .\docs\spec.md `
+  --theme business `
+  --cover --cover-author "Team A" --cover-version "v2" `
+  --header-text "Quarterly Report" --footer-text "Internal" --footer-style page-number
 ```
 
 ### Scenario: Team-standard settings for repeated runs
 Store settings in JSON and only pass the input file.
-```bash
-python scripts/md_to_pdf.py --config assets/config.example.json ./docs/spec.md
+```powershell
+python .\scripts\md_to_pdf.py --config .\assets\config.example.json .\docs\spec.md
 ```
 
 ### Scenario: Convert many markdown files in one run
-```bash
-python scripts/md_to_pdf.py --batch-dir ./docs --batch-glob "**/*.md" --output-dir ./pdfs
+```powershell
+python .\scripts\md_to_pdf.py --batch-dir .\docs --batch-glob "**/*.md" --output-dir .\pdfs
 ```
 
 ### Scenario: Large batch in CI, keep going and collect results
-```bash
-python scripts/md_to_pdf.py --batch-dir ./docs --continue-on-error --report ./logs/convert-report.json
+```powershell
+python .\scripts\md_to_pdf.py --batch-dir .\docs --continue-on-error --report .\logs\convert-report.json
 ```
 
 ### Scenario: Speed up repeated batch runs
 Skip files whose PDFs are already newer than source markdown.
-```bash
-python scripts/md_to_pdf.py --batch-dir ./docs --skip-up-to-date
+```powershell
+python .\scripts\md_to_pdf.py --batch-dir .\docs --skip-up-to-date
 ```
 
 ### Scenario: Retry only failed files from a previous run
-```bash
-python scripts/md_to_pdf.py --batch-dir ./docs --retry-failed-from ./logs/convert-report.json
+```powershell
+python .\scripts\md_to_pdf.py --batch-dir .\docs --retry-failed-from .\logs\convert-report.json
 ```
 
 ## Supported Markdown

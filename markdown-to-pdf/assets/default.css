@@ -60,15 +60,13 @@ body {
   font-size: 13pt;
   color: #36556a;
 }
-  display: flex;
-  align-items: baseline;
-  gap: 0.5em;
 
 .cover-meta {
   margin-top: 1.2em;
   border-top: 1px solid #d6e3ed;
   padding-top: 0.9em;
 }
+
 .toc a::after {
   content: "";
   flex: 1 1 auto;
@@ -87,12 +85,18 @@ body {
 .cover-meta p {
   margin: 0.28em 0;
   color: #334e62;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
 }
 
 .cover-meta .label {
   display: inline-block;
   width: 72px;
   color: #567085;
+  font-weight: 600;
+}
+
 .keep-with-next {
   break-after: avoid-page;
   page-break-after: avoid;
@@ -105,8 +109,6 @@ ul,
 ol {
   break-inside: avoid;
   page-break-inside: avoid;
-}
-  font-weight: 600;
 }
 
 h1,
