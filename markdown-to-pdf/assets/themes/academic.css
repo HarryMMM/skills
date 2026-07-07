@@ -1,0 +1,38 @@
+:root {
+  --heading: #28374a;
+  --accent: #3c5a7a;
+  --line: #cfd7df;
+  --code-bg: #f8f9fb;
+  --quote-bg: #f7f9fc;
+}
+
+html,
+body {
+  font-family: "Times New Roman", "SimSun", serif;
+  font-size: 10.8pt;
+  line-height: 1.85;
+}
+
+h1 {
+  text-align: center;
+  border-bottom: 1.5px solid var(--line);
+}
+
+h2 {
+  border-left: none;
+  border-bottom: 1px solid var(--line);
+  padding-left: 0;
+}
+
+p {
+  text-indent: 2em;
+}
+
+.toc {
+  border-radius: 2px;
+  background: #fff;
+}
+
+.cover-page {
+  background: #fff;
+}

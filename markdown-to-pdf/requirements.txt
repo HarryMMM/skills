@@ -1,0 +1,6 @@
+markdown-it-py>=3.0.0
+mdit-py-plugins>=0.4.2
+playwright>=1.54.0
+pygments>=2.18.0
+beautifulsoup4>=4.12.3
+linkify-it-py>=2.0.3

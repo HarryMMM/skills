@@ -1,0 +1,34 @@
+:root {
+  --heading: #0f4c6d;
+  --accent: #0f6f92;
+  --line: #d3dee7;
+  --code-bg: #f3f7fa;
+  --quote-bg: #f6fafc;
+}
+
+html,
+body {
+  font-family: "Calibri", "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+h1 {
+  font-size: 30pt;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+h2 {
+  border-left-width: 6px;
+}
+
+table {
+  font-size: 9.8pt;
+}
+
+th {
+  background: #e6f1f7;
+}
+
+.cover-page {
+  background: linear-gradient(135deg, #f2f7fb 0%, #e6f0f7 100%);
+}

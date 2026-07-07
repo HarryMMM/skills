@@ -1,0 +1,39 @@
+:root {
+  --heading: #0a2a43;
+  --accent: #0fa3b1;
+  --line: #d3dce4;
+  --code-bg: #0f1720;
+  --quote-bg: #f2f7fa;
+}
+
+html,
+body {
+  font-family: "Bahnschrift", "Consolas", "Microsoft YaHei", sans-serif;
+}
+
+h1 {
+  border-bottom: 3px solid var(--accent);
+}
+
+h2 {
+  border-left: 4px solid var(--accent);
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid #223244;
+}
+
+pre code {
+  color: #d6e2ee;
+}
+
+p code,
+li code,
+td code {
+  border-color: #cddcea;
+}
+
+.cover-page {
+  background: radial-gradient(circle at top right, #daf4f6 0%, #eef6fb 40%, #ffffff 100%);
+}
