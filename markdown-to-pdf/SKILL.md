@@ -27,41 +27,52 @@ playwright install chromium
 Do not run `--interactive` from an agent or automation. Agent tool sessions cannot reliably answer Python `input()` prompts, so interactive mode may hang or fail. If user choices are needed, ask the user in chat first, then run the script with explicit CLI options or `--config`.
 
 ### Agent guided option flow
-Follow the fixed question template below. Ask one question at a time, show the default in brackets, and accept Enter as confirmation. Skip questions whose answer is already known from context.
 
-#### Fixed question template
+#### Core principle
+Talk like a helpful assistant, not a CLI tool. Never output technical summaries or parameter lists. Guide the user with plain, friendly questions.
+
+#### Conversation flow
+1. **Auto-resolve** from the user's message: conversion mode, source path, output location. Only ask if genuinely missing.
+2. **Ask only what matters** — and only if the user's intent differs from the default:
+   - Theme → default `business`. Ask only if the user wants something different.
+   - Cover page → default ON. Ask only if the user wants to skip it.
+   - Table of contents → default ON. Ask only if the user wants to skip it.
+   - Header & footer → default ON. Ask only if the user wants to skip it.
+3. **Confirm before running** — one short sentence like "即将生成 PDF，确认吗？[Y/n]". Default Y.
+4. **Run** `python .\scripts\md_to_pdf.py ...` with explicit flags.
+5. **Report** the generated PDF path.
+
+#### Good example (what the agent should say)
 ```
-Step 1  Conversion mode    AUTO     Infer from user message (single file vs directory/batch keywords)
-Step 2  Source path        AUTO     Extract from user message; ask ONLY if missing
-Step 3  Output location    AUTO     PDF sits beside source markdown by default; ask ONLY if user wants a different path
-Step 4  Theme             [business] (default / business / academic / tech) — skip if user already specified
-Step 5  Table of contents [Y/n]      (default Y — skip unless user mentions disabling)
-Step 6  Cover page        [y/N]      (default N — if Y, ask: title, subtitle, author, version, date)
-Step 7  Header & footer   [Y/n]      (default Y — if Y, ask: footer style [page-total], custom text [N])
+用户: 帮我把 docs/report.md 转成 PDF
+Agent: 好的，我会用 business 风格生成 PDF，包含封面、目录和页眉页脚。确认生成吗？[Y/n]
+用户: Y
+Agent: PDF 已生成：docs/report.pdf
 ```
 
-Rule: Steps 1-3 are auto-resolved. Only ask the user when the information is genuinely missing from context. Steps 4-7 use defaults — ask only when the user's intent differs from the default.
-
-Batch-only follow-ups (ask only when Step 1 = batch):
+#### Bad example (what the agent must NOT say)
 ```
-  Skip up-to-date      [Y/n]   (default Y)
-  Continue on error    [Y/n]   (default Y)
-  JSON report          [Y/n]   (default Y for CI / repeated runs)
+已自动识别：
+转换模式：单文件
+源文件：report.md
+输出位置：与源文件同目录
+主题：business
+目录：Y
+封面：N
+页眉页脚：Y
 ```
 
-#### Defaults (do not ask)
+#### Defaults (never ask)
 - `--browser-channel chromium`
 - no `--executable-path`
 - no custom `--style`
 - `--header-footer` enabled with `--footer-style page-total`
 - no `--retry-failed-from`
 
-#### Agent execution pattern
-1. Ask the minimum necessary questions following the template.
-2. Summarize the selected options briefly.
-3. Ask the user to confirm (default Y — Enter to proceed).
-4. Run `python .\scripts\md_to_pdf.py ...` with explicit flags.
-5. Report the generated PDF path.
+#### Batch-only options (ask only when useful)
+- Skip up-to-date → default Y
+- Continue on error → default Y
+- JSON report → default Y for CI / repeated runs
 
 ### Scenario: Human terminal guided flow
 Use interactive mode only when a human is running the command in a real terminal. It asks questions step by step and builds options for you.

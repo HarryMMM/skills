@@ -87,7 +87,7 @@ def _run_interactive_wizard() -> dict[str, object]:
     config["theme"] = _prompt_choice("Theme", ["default", "business", "academic", "tech"], "business")
 
     config["toc"] = _prompt_yes_no("Enable table of contents", True)
-    config["cover"] = _prompt_yes_no("Enable cover page", False)
+    config["cover"] = _prompt_yes_no("Enable cover page", True)
     if bool(config["cover"]):
         cover_title = _prompt_text("Cover title (optional)")
         cover_subtitle = _prompt_text("Cover subtitle (optional)")
@@ -693,7 +693,7 @@ def main() -> None:
     theme = theme_raw
 
     include_toc = _pick_bool(args.toc, merged_config, "toc", True)
-    include_cover = _pick_bool(args.cover, merged_config, "cover", False)
+    include_cover = _pick_bool(args.cover, merged_config, "cover", True)
 
     cover_title = _to_optional_str(_pick_value(args.cover_title, merged_config, "cover_title", None), "cover_title")
     cover_subtitle = _to_optional_str(
