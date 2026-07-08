@@ -85,10 +85,6 @@ def _run_interactive_wizard() -> dict[str, object]:
                 config["retry_failed_from"] = retry_report
 
     config["theme"] = _prompt_choice("Theme", ["default", "business", "academic", "tech"], "business")
-    if _prompt_yes_no("Use custom CSS", False):
-        custom_style = _prompt_text("Custom CSS path")
-        if custom_style:
-            config["style"] = custom_style
 
     config["toc"] = _prompt_yes_no("Enable table of contents", True)
     config["cover"] = _prompt_yes_no("Enable cover page", False)
@@ -113,28 +109,6 @@ def _run_interactive_wizard() -> dict[str, object]:
     if bool(config["header_footer"]):
         footer_style = _prompt_choice("Footer style", ["page-total", "page-number", "none"], "page-total")
         config["footer_style"] = footer_style
-        if _prompt_yes_no("Customize header or footer text", False):
-            header_text = _prompt_text("Header text (optional)")
-            footer_text = _prompt_text("Footer text (optional)")
-            if header_text:
-                config["header_text"] = header_text
-            if footer_text:
-                config["footer_text"] = footer_text
-
-    if _prompt_yes_no("Use a non-default browser", False):
-        config["browser_channel"] = _prompt_choice(
-            "Browser channel",
-            ["chromium", "chrome", "msedge"],
-            "chromium",
-        )
-        executable_path = _prompt_text("Browser executable path (optional)")
-        if executable_path:
-            config["executable_path"] = executable_path
-
-    if _prompt_yes_no("Write a JSON conversion report", mode == "batch"):
-        report_path = _prompt_text("JSON report path", "reports/convert-report.json")
-        if report_path:
-            config["report"] = report_path
 
     return config
 
@@ -358,52 +332,52 @@ def _build_footer_template(text: str) -> str:
 
 
 def _build_footer_template_with_style(text: str, footer_style: str) -> str:
-        safe_text = html.escape(text)
-        if footer_style == "page-number":
-                right = "<span>Page <span class=\"pageNumber\"></span></span>"
-        elif footer_style == "none":
-                right = "<span></span>"
-        else:
-                right = "<span><span class=\"pageNumber\"></span> / <span class=\"totalPages\"></span></span>"
+    safe_text = html.escape(text)
+    if footer_style == "page-number":
+        right = "<span>Page <span class=\"pageNumber\"></span></span>"
+    elif footer_style == "none":
+        right = "<span></span>"
+    else:
+        right = "<span><span class=\"pageNumber\"></span> / <span class=\"totalPages\"></span></span>"
 
-        return (
-                "<div style=\"width:100%; font-size:8px; color:#54606c; "
-                "padding:0 12mm; display:flex; justify-content:space-between; "
-                "align-items:center; box-sizing:border-box;\">"
-                f"<span>{safe_text}</span>"
-                f"{right}"
-                "</div>"
-        )
+    return (
+        "<div style=\"width:100%; font-size:8px; color:#54606c; "
+        "padding:0 12mm; display:flex; justify-content:space-between; "
+        "align-items:center; box-sizing:border-box;\">"
+        f"<span>{safe_text}</span>"
+        f"{right}"
+        "</div>"
+    )
 
 
 def _estimate_toc_page_numbers(page, a4_height_mm: float = 297.0) -> None:
-        page.evaluate(
-                """
-                ({ pageHeightPx }) => {
-                    const tocLinks = Array.from(document.querySelectorAll('.toc-list a[href^="#"]'));
-                    for (const link of tocLinks) {
-                        const href = link.getAttribute('href') || '';
-                        if (!href.startsWith('#') || href.length < 2) {
-                            continue;
-                        }
-                        const target = document.getElementById(href.slice(1));
-                        if (!target) {
-                            continue;
-                        }
-                        const top = target.getBoundingClientRect().top + window.scrollY;
-                        const pageNumber = Math.floor(top / pageHeightPx) + 1;
-                        let numberNode = link.querySelector('.toc-page-number');
-                        if (!numberNode) {
-                            numberNode = document.createElement('span');
-                            numberNode.className = 'toc-page-number';
-                            link.appendChild(numberNode);
-                        }
-                        numberNode.textContent = String(pageNumber);
-                    }
+    page.evaluate(
+        """
+        ({ pageHeightPx }) => {
+            const tocLinks = Array.from(document.querySelectorAll('.toc-list a[href^="#"]'));
+            for (const link of tocLinks) {
+                const href = link.getAttribute('href') || '';
+                if (!href.startsWith('#') || href.length < 2) {
+                    continue;
                 }
-                """,
-                {"pageHeightPx": a4_height_mm * 96 / 25.4},
-        )
+                const target = document.getElementById(href.slice(1));
+                if (!target) {
+                    continue;
+                }
+                const top = target.getBoundingClientRect().top + window.scrollY;
+                const pageNumber = Math.floor(top / pageHeightPx) + 1;
+                let numberNode = link.querySelector('.toc-page-number');
+                if (!numberNode) {
+                    numberNode = document.createElement('span');
+                    numberNode.className = 'toc-page-number';
+                    link.appendChild(numberNode);
+                }
+                numberNode.textContent = String(pageNumber);
+            }
+        }
+        """,
+        {"pageHeightPx": a4_height_mm * 96 / 25.4},
+    )
 
 
 def convert_markdown_to_pdf(
