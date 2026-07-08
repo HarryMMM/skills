@@ -77,16 +77,18 @@ def _run_interactive_wizard() -> dict[str, object]:
         output_dir = _prompt_text("Output directory (leave empty to reuse batch dir)")
         if output_dir:
             config["output_dir"] = output_dir
-        config["continue_on_error"] = _prompt_yes_no("Continue when one file fails", True)
         config["skip_up_to_date"] = _prompt_yes_no("Skip files that are already up-to-date", True)
-        retry_report = _prompt_text("Retry failed from report path (optional)")
-        if retry_report:
-            config["retry_failed_from"] = retry_report
+        config["continue_on_error"] = _prompt_yes_no("Continue when one file fails", True)
+        if _prompt_yes_no("Retry only failed files from a previous report", False):
+            retry_report = _prompt_text("Retry failed from report path")
+            if retry_report:
+                config["retry_failed_from"] = retry_report
 
     config["theme"] = _prompt_choice("Theme", ["default", "business", "academic", "tech"], "business")
-    custom_style = _prompt_text("Custom CSS path (optional)")
-    if custom_style:
-        config["style"] = custom_style
+    if _prompt_yes_no("Use custom CSS", False):
+        custom_style = _prompt_text("Custom CSS path")
+        if custom_style:
+            config["style"] = custom_style
 
     config["toc"] = _prompt_yes_no("Enable table of contents", True)
     config["cover"] = _prompt_yes_no("Enable cover page", False)
@@ -109,27 +111,30 @@ def _run_interactive_wizard() -> dict[str, object]:
 
     config["header_footer"] = _prompt_yes_no("Enable header and footer", True)
     if bool(config["header_footer"]):
-        header_text = _prompt_text("Header text (optional)")
-        footer_text = _prompt_text("Footer text (optional)")
         footer_style = _prompt_choice("Footer style", ["page-total", "page-number", "none"], "page-total")
-        if header_text:
-            config["header_text"] = header_text
-        if footer_text:
-            config["footer_text"] = footer_text
         config["footer_style"] = footer_style
+        if _prompt_yes_no("Customize header or footer text", False):
+            header_text = _prompt_text("Header text (optional)")
+            footer_text = _prompt_text("Footer text (optional)")
+            if header_text:
+                config["header_text"] = header_text
+            if footer_text:
+                config["footer_text"] = footer_text
 
-    config["browser_channel"] = _prompt_choice(
-        "Browser channel",
-        ["chromium", "chrome", "msedge"],
-        "chromium",
-    )
-    executable_path = _prompt_text("Browser executable path (optional)")
-    if executable_path:
-        config["executable_path"] = executable_path
+    if _prompt_yes_no("Use a non-default browser", False):
+        config["browser_channel"] = _prompt_choice(
+            "Browser channel",
+            ["chromium", "chrome", "msedge"],
+            "chromium",
+        )
+        executable_path = _prompt_text("Browser executable path (optional)")
+        if executable_path:
+            config["executable_path"] = executable_path
 
-    report_path = _prompt_text("JSON report path (optional)")
-    if report_path:
-        config["report"] = report_path
+    if _prompt_yes_no("Write a JSON conversion report", mode == "batch"):
+        report_path = _prompt_text("JSON report path", "reports/convert-report.json")
+        if report_path:
+            config["report"] = report_path
 
     return config
 

@@ -32,6 +32,30 @@ playwright install chromium
 ### Agent usage rule
 Do not run `--interactive` from an agent or automation. Agent tool sessions cannot reliably answer Python `input()` prompts, so interactive mode may hang or fail. If user choices are needed, ask the user in chat first, then run the script with explicit CLI options or `--config`.
 
+### Agent guided option flow
+Treat command-line flags as user-facing options, but do not ask about every flag. Guide the user through the important choices and apply defaults for low-value or advanced options.
+
+Ask only when the answer changes the output or workflow:
+1. **Input mode**: single Markdown file or batch directory.
+2. **Source path**: Markdown file path, or batch directory.
+3. **Output location**: ask only if the user needs a custom PDF path/output directory; otherwise use the script defaults.
+4. **Document style**: default, business, academic, or tech. Use `business` when the user wants a polished report and `default` for quick conversion.
+5. **Navigation/layout**: table of contents defaults to on; ask only if the user mentions disabling it. Cover page defaults to off; ask for cover metadata only when cover is enabled.
+6. **Batch behavior**: for batch mode, default to `--batch-glob "*.md"` and ask about `--skip-up-to-date`, `--continue-on-error`, and `--report` only when useful for repeated runs or CI.
+
+Use built-in defaults unless the user explicitly asks:
+- `--browser-channel chromium`
+- no `--executable-path`
+- no custom `--style`
+- `--header-footer` enabled with `--footer-style page-total`
+- no `--retry-failed-from`
+
+For agent-driven conversion, prefer this pattern:
+1. Ask the minimum necessary questions in chat.
+2. Summarize the selected options briefly.
+3. Run `python .\scripts\md_to_pdf.py ...` with explicit flags.
+4. Report the generated PDF path.
+
 ### Scenario: Human terminal guided flow
 Use interactive mode only when a human is running the command in a real terminal. It asks questions step by step and builds options for you.
 ```powershell
