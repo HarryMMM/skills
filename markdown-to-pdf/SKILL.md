@@ -16,13 +16,7 @@ user-invocable: true
 - Python 3.10+
 - Playwright with Chromium
 
-## Install
-Install the skill:
-```bash
-npx skills add harryMMM/skills --skill markdown-to-pdf -g
-```
-
-Install runtime dependencies:
+## Runtime Dependencies
 ```powershell
 pip install -r .\requirements.txt
 playwright install chromium
